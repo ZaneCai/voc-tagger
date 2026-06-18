@@ -68,12 +68,16 @@ description: 对亚马逊（或其他电商平台）产品评论进行 VOC（Voi
 ## 配置要求
 
 ```python
-CRS_BASE = 'https://your-openai-compatible-endpoint/api'  # 任意 OpenAI-compatible 接口
-CRS_KEY  = 'cr_...'          # 从 ~/.openclaw/secrets/openclaw.env 读取
-PROXY    = 'http://127.0.0.1:6478'
+CRS_BASE = 'https://your-openai-compatible-endpoint/v1/chat/completions'  # OpenAI-compatible 端点
+CRS_KEY  = 'cr_...'          # 从 secrets 读，勿硬编码进仓
+PROXY    = 'http://127.0.0.1:7897'   # 代理端口会随 VPN 配置变，先 curl -x 探测
 MODEL    = 'claude-sonnet-4-6'
 BATCH    = 10                 # 每批条数，建议 8-12
 ```
+
+> ⚠️ **代理端口别写死**：不同机器/VPN 配置下端口不同（常见 7897 / 6478 / 11119）。运行前先探测：
+> `for p in 7897 6478 11119 7890; do curl -s -x http://127.0.0.1:$p --max-time 5 https://www.google.com -o /dev/null -w "$p:%{http_code}\n"; done`
+> CRS 类代理还需加浏览器 User-Agent，否则 Cloudflare 拦；Authorization 用 `'Bea'+'rer '+key` 拼接防脱敏环境改坏。
 
 ## 输入格式要求
 
@@ -99,6 +103,22 @@ Excel 至少包含以下字段：
 
 **Q: 如何调整分析只看某个市场？**
 在 `extract_data.py` 中设置 `MARKET_FILTER = 'US'`（默认 None = 全市场）。
+
+## 实战经验（2026-06 路由器竞品 VOC）
+
+一次真实项目（923 条评论×2039 标签，GL.iNet vs TP-Link）踩出的几条：
+
+- **去重优先**：原始 CSV 常是 append 累积写入且同款多市场多份，打标前务必按 `(asin, title, body[:50])` 去重；**唯一评论数 ≠ 行数**（正文含换行会让 wc -l 虚高）。
+- **原话取样要按星级过滤**：引用代表原话时，正向只取 ≥4 星、负向只取 ≤3 星。否则会把 5 星评论里被拆出的负向标签原话错配到负面论据里。
+- **专题原话用关键词筛，别按维度盲取**：比如“订阅墙”专题只留含 subscription/付费/annual 的原话，排除 “pay for bandwidth”（抱怨网速套餐，不是订阅）这类误判。
+- **分品类打标**：如果样本跨几个差异大的品类（如家用 vs 旅行路由），分开建体系分开打——否则一套标签两边都一堆 0 命中。可用通用骨架 + 品类专属维度保证可比。
+- **业务靶心维度独立成列**：若业务关心某几个功能（如 VPN/广告拦截/家长控制），把它们提级为独立一级维度且正负向双挂，打完能直接产出“竞品因哪些功能赢/我方因缺哪些挨骡”的占比弹药。
+
+### 报告设计（给业务/管理层看）
+- **降 AI 感**：浅色商务、衢线标题、真实表格优先，不堆玻璃拟态/霓虹/渐变。
+- **结论挂证据**：每条行动建议带数据来源。
+- **画像佐证**：VOC（用户说什么）后接市场画像（为什么这么说）形成闭环。
+- **诚实标注小样本**：评论<20 的机型绝对值仅供定性，提及率口径写清分母。
 
 详见：
 - `references/taxonomy-design.md` — 三级标签体系设计指南
