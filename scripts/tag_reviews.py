@@ -16,8 +16,8 @@ from collections import defaultdict
 
 # ── CONFIG ────────────────────────────────────────────────────────────
 CRS_BASE     = 'https://your-openai-compatible-endpoint/api'  # 替换为你的 OpenAI-compatible API 地址
-CRS_KEY      = ''          # 填入 CRS API Key，或从环境变量读取
-PROXY        = 'http://127.0.0.1:6478'
+CRS_KEY      = ''          # 填入你的 API Key，或从环境变量/secrets 读取
+PROXY        = ''          # 选填：如需代理访问填自己的端口，如 http://127.0.0.1:<port>
 MODEL        = 'claude-sonnet-4-6'
 BATCH        = 10          # 每批条数（建议 8-12）
 INPUT_FILE   = ''          # 输入 Excel 路径

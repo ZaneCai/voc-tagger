@@ -68,16 +68,14 @@ description: 对亚马逊（或其他电商平台）产品评论进行 VOC（Voi
 ## 配置要求
 
 ```python
-CRS_BASE = 'https://your-openai-compatible-endpoint/v1/chat/completions'  # OpenAI-compatible 端点
-CRS_KEY  = 'cr_...'          # 从 secrets 读，勿硬编码进仓
-PROXY    = 'http://127.0.0.1:7897'   # 代理端口会随 VPN 配置变，先 curl -x 探测
+LLM_BASE = '<your-openai-compatible-endpoint>'  # 你的 OpenAI-compatible 接口
+LLM_KEY  = '<from-env-or-secrets>'              # 从环境变量/secrets 读，勿硬编码进仓
+PROXY    = ''                                    # 选填：如需代理访问填自己的端口
 MODEL    = 'claude-sonnet-4-6'
-BATCH    = 10                 # 每批条数，建议 8-12
+BATCH    = 10                                    # 每批条数，建议 8-12
 ```
 
-> ⚠️ **代理端口别写死**：不同机器/VPN 配置下端口不同（常见 7897 / 6478 / 11119）。运行前先探测：
-> `for p in 7897 6478 11119 7890; do curl -s -x http://127.0.0.1:$p --max-time 5 https://www.google.com -o /dev/null -w "$p:%{http_code}\n"; done`
-> CRS 类代理还需加浏览器 User-Agent，否则 Cloudflare 拦；Authorization 用 `'Bea'+'rer '+key` 拼接防脱敏环境改坏。
+> 配置全部走环境变量/secrets，不要把密钥或个人网络配置写进仓。若用 Cloudflare 后的代理类网关，调用时需加浏览器 User-Agent。
 
 ## 输入格式要求
 
